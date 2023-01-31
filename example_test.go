@@ -2,6 +2,7 @@ package msgpack_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 
 	"github.com/vmihailenco/msgpack/v5"
@@ -218,4 +219,27 @@ func ExampleMarshal_escapedNames() {
 	}
 	fmt.Printf("%#v\n", item)
 	//output: msgpack_test.Item{SomethingSpecial:0x7b, HelloWorld:"hello!"}
+}
+
+func ExampleMarshal_jsonNumber() {
+	jsonWithBigNumber := `{"big_number": 14037182127679936560}` // an uint64 number
+	decoder := json.NewDecoder(bytes.NewBuffer([]byte(jsonWithBigNumber)))
+	decoder.UseNumber()
+	var in interface{}
+	decoder.Decode(&in)
+	b, err := msgpack.Marshal(in)
+	if err != nil {
+		panic(err)
+	}
+
+	var out map[string]interface{}
+	err = msgpack.Unmarshal(b, &out)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("big_number =", out["big_number"])
+
+	// Output:
+	// big_number = 14037182127679936560
 }

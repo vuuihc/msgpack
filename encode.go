@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"io"
 	"reflect"
+	"strconv"
 	"sync"
 	"time"
+
+	"encoding/json"
 
 	"github.com/vmihailenco/msgpack/v5/msgpcode"
 )
@@ -199,6 +202,19 @@ func (e *Encoder) Encode(v interface{}) error {
 	switch v := v.(type) {
 	case nil:
 		return e.EncodeNil()
+	case json.Number:
+		i, err := v.Int64()
+		if err == nil {
+			return e.encodeInt64Cond(i)
+		}
+		u, err := strconv.ParseUint(v.String(), 10, 64)
+		if err == nil {
+			return e.encodeUint64Cond(u)
+		}
+		f, err := v.Float64()
+		if err == nil {
+			return e.EncodeFloat64(f)
+		}
 	case string:
 		return e.EncodeString(v)
 	case []byte:
